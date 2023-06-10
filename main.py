@@ -3,6 +3,7 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
+from urllib.parse import urljoin
 
 
 def check_for_redirect(response):
@@ -10,28 +11,39 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def download_txt(url, filename, folder):
+def download_txt(book_id, filename, folder):
+    params = {'id': book_id}
+    url = f"https://tululu.org/txt.php"
     filename = sanitize_filename(filename)
     path = Path.cwd().joinpath(folder)
-
     # path = Path(path_string)
-    Path.mkdir(path, parents=True, exist_ok=True)
+
     try:
-        response = requests.get(url)
+        response = requests.get(url, params=params)
         response.raise_for_status()
         check_for_redirect(response)
     except requests.HTTPError:
         return
 
+    Path.mkdir(path, parents=True, exist_ok=True)
     with open(f'{folder}/{filename}.txt', 'wb') as file:
         file.write(response.content)
 
     return path.joinpath(filename)
 
 
+def download_image(url, filename, folder='images'):
+    path = Path.cwd().joinpath(folder)
+    Path.mkdir(path, parents=True, exist_ok=True)
+    response = requests.get(url)
+    response.raise_for_status()
+    with open(f'{folder}/{filename}', 'wb') as file:
+        file.write(response.content)
+
+
 for book_id in range(10):
     book_id += 1
-    book_url = f"https://tululu.org/txt.php?id={book_id}"
+    url = 'https://tululu.org'
     page_url = f'https://tululu.org/b{book_id}/'
     try:
         response = requests.get(page_url)
@@ -41,7 +53,11 @@ for book_id in range(10):
         continue
     soup = BeautifulSoup(response.text, 'lxml')
     title, author = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
-    # image = soup.find('div', class_='bookimage').find('img')['src']
     title = f'{book_id}. {title}'
-    # download_txt(book_url, title, f'books/{author}')
-    print(download_txt(book_url, title, 'books'))
+    # save_path = download_txt(book_url, title, f'books/{author}')
+    save_path = download_txt(book_id, title, 'books')
+    if save_path:
+        image = soup.find('div', class_='bookimage').find('img')['src']
+        image_name = image.split('/')[-1]
+        image_url = urljoin(url, image)
+        download_image(image_url, image_name)
