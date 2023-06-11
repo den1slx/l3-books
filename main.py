@@ -72,7 +72,14 @@ def get_image(soup):
 def parse_book_page(html_page):
     soup = BeautifulSoup(html_page, 'lxml')
     # TODO fix split: broke if ' - ' in name
-    title, author = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
+    splited_text = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
+    if len(splited_text) > 2:
+        author = splited_text[-1]
+        splited_text.pop()
+        title = ' - '.join(splited_text)
+    else:
+        title, author = splited_text
+
     image_url, image_name = get_image(soup)
     parsed_content = {
         'author': author,
