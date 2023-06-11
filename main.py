@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin
-from pprint import pprint
+import argparse
 
 
 def check_for_redirect(response):
@@ -71,6 +71,7 @@ def get_image(soup):
 
 def parse_book_page(html_page):
     soup = BeautifulSoup(html_page, 'lxml')
+    # TODO fix split: broke if ' - ' in name
     title, author = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
     image_url, image_name = get_image(soup)
     parsed_content = {
@@ -84,19 +85,44 @@ def parse_book_page(html_page):
     return parsed_content
 
 
-for book_id in range(10):
-    book_id += 1
-    url = 'https://tululu.org'
-    page_url = f'https://tululu.org/b{book_id}/'
-    try:
-        response = requests.get(page_url)
-        response.raise_for_status()
-        check_for_redirect(response)
-    except requests.HTTPError:
-        continue
-    parsed_content = parse_book_page(response.text)
-    title = f"{book_id}. {parsed_content['title']}"
-    save_path = download_txt(book_id, title, 'books')
-    if save_path:
-        download_comments(parsed_content['comments'], book_id, 'books')
-        download_image(parsed_content['image_url'], parsed_content['image_name'])
+def create_parser():
+    parser = argparse.ArgumentParser(description='download books from tululu.org')
+    parser.add_argument(
+        '-s',
+        '--start_id',
+        default=1,
+        type=int,
+        help='Start download from this id, default: %(default)s'
+    )
+    parser.add_argument(
+        '-e',
+        '--end_id',
+        default=10,
+        type=int,
+        help='Complete download on this id, default: %(default)s'
+    )
+    return parser
+
+
+def main():
+    parser = create_parser()
+    args = parser.parse_args()
+    start_id, end_id = args.start_id, args.end_id
+    for book_id in range(start_id, end_id):
+        page_url = f'https://tululu.org/b{book_id}/'
+        try:
+            response = requests.get(page_url)
+            response.raise_for_status()
+            check_for_redirect(response)
+        except requests.HTTPError:
+            continue
+        parsed_content = parse_book_page(response.text)
+        title = f"{book_id}. {parsed_content['title']}"
+        save_path = download_txt(book_id, title, 'books')
+        if save_path:
+            download_comments(parsed_content['comments'], book_id, 'books')
+            download_image(parsed_content['image_url'], parsed_content['image_name'])
+
+
+if __name__ == '__main__':
+    main()
