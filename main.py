@@ -41,7 +41,7 @@ def download_image(url, filename, folder='images'):
         file.write(response.content)
 
 
-def get_comments(soup, filename, folder):
+def download_comments(soup, filename, folder):
     comments = soup.body.table.find_all('div', class_='texts')
     comments_string = ''
     for comment in comments:
@@ -51,6 +51,12 @@ def get_comments(soup, filename, folder):
     # return comments_string
     with open(f'{folder}/{filename} comments.txt', 'w') as file:
         file.write(comments_string)
+
+
+def get_genres(soup):
+    genres = soup.find('span', class_='d_book').find_all('a')
+    genres = [genre.text for genre in genres]
+    return genres
 
 
 for book_id in range(10):
@@ -66,10 +72,12 @@ for book_id in range(10):
     soup = BeautifulSoup(response.text, 'lxml')
     title, author = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
     title = f'{book_id}. {title}'
-    # save_path = download_txt(book_url, title, f'books/{author}')
     save_path = download_txt(book_id, title, 'books')
+    # save_path = True
     if save_path:
-        get_comments(soup, book_id, 'books')
+        print(title)
+        print(get_genres(soup))
+        download_comments(soup, book_id, 'books')
         image = soup.find('div', class_='bookimage').find('img')['src']
         image_name = image.split('/')[-1]
         image_url = urljoin(url, image)
