@@ -41,6 +41,18 @@ def download_image(url, filename, folder='images'):
         file.write(response.content)
 
 
+def get_comments(soup, filename, folder):
+    comments = soup.body.table.find_all('div', class_='texts')
+    comments_string = ''
+    for comment in comments:
+        comments_string += comment.span.text
+        comments_string += '\n'
+    # print(comments_string)
+    # return comments_string
+    with open(f'{folder}/{filename} comments.txt', 'w') as file:
+        file.write(comments_string)
+
+
 for book_id in range(10):
     book_id += 1
     url = 'https://tululu.org'
@@ -57,6 +69,7 @@ for book_id in range(10):
     # save_path = download_txt(book_url, title, f'books/{author}')
     save_path = download_txt(book_id, title, 'books')
     if save_path:
+        get_comments(soup, book_id, 'books')
         image = soup.find('div', class_='bookimage').find('img')['src']
         image_name = image.split('/')[-1]
         image_url = urljoin(url, image)
