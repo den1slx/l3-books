@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin
+from pprint import pprint
 
 
 def check_for_redirect(response):
@@ -41,22 +42,46 @@ def download_image(url, filename, folder='images'):
         file.write(response.content)
 
 
-def download_comments(soup, filename, folder):
-    comments = soup.body.table.find_all('div', class_='texts')
-    comments_string = ''
-    for comment in comments:
-        comments_string += comment.span.text
-        comments_string += '\n'
-    # print(comments_string)
-    # return comments_string
-    with open(f'{folder}/{filename} comments.txt', 'w') as file:
-        file.write(comments_string)
+def download_comments(comments, book_id, folder):
+    with open(f'{folder}/{book_id} comments.txt', 'w') as file:
+        file.write(comments)
 
 
 def get_genres(soup):
     genres = soup.find('span', class_='d_book').find_all('a')
     genres = [genre.text for genre in genres]
     return genres
+
+
+def get_comments(soup):
+    soup_comments = soup.body.table.find_all('div', class_='texts')
+    comments = ''
+    for comment in soup_comments:
+        comments += f'{comment.span.text}\n'
+    return comments
+
+
+def get_image(soup):
+    url = 'https://tululu.org'
+    image = soup.find('div', class_='bookimage').find('img')['src']
+    image_name = image.split('/')[-1]
+    image_url = urljoin(url, image)
+    return image_url, image_name
+
+
+def parse_book_page(html_page):
+    soup = BeautifulSoup(html_page, 'lxml')
+    title, author = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
+    image_url, image_name = get_image(soup)
+    parsed_content = {
+        'author': author,
+        'title': title,
+        'genres': get_genres(soup),
+        'comments': get_comments(soup),
+        'image_url': image_url,
+        'image_name': image_name,
+    }
+    return parsed_content
 
 
 for book_id in range(10):
@@ -69,16 +94,9 @@ for book_id in range(10):
         check_for_redirect(response)
     except requests.HTTPError:
         continue
-    soup = BeautifulSoup(response.text, 'lxml')
-    title, author = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
-    title = f'{book_id}. {title}'
+    parsed_content = parse_book_page(response.text)
+    title = f"{book_id}. {parsed_content['title']}"
     save_path = download_txt(book_id, title, 'books')
-    # save_path = True
     if save_path:
-        print(title)
-        print(get_genres(soup))
-        download_comments(soup, book_id, 'books')
-        image = soup.find('div', class_='bookimage').find('img')['src']
-        image_name = image.split('/')[-1]
-        image_url = urljoin(url, image)
-        download_image(image_url, image_name)
+        download_comments(parsed_content['comments'], book_id, 'books')
+        download_image(parsed_content['image_url'], parsed_content['image_name'])
