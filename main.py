@@ -20,7 +20,7 @@ def download_txt(book_id, filename, folder):
     filename = sanitize_filename(filename)
     path = Path.cwd().joinpath(folder)
 
-    response = await_connection(url, params=params)
+    response = get_response(url, params=params)
     response.raise_for_status()
     check_for_redirect(response)
 
@@ -36,7 +36,7 @@ def download_txt(book_id, filename, folder):
 def download_image(url, filename, folder='images'):
     path = Path.cwd().joinpath(folder)
     Path.mkdir(path, parents=True, exist_ok=True)
-    response = await_connection(url)
+    response = get_response(url)
     response.raise_for_status()
     with open(f'{folder}/{filename}', 'wb') as file:
         file.write(response.content)
@@ -61,11 +61,15 @@ def get_comments(soup):
     return comments
 
 
-def get_url_and_name_image(soup, base_url):
+def get_image_url(soup, base_url):
     image_address = soup.find('div', class_='bookimage').find('img')['src']
-    image_name = image_address.split('/')[-1]
     image_url = urljoin(base_url, image_address)
-    return image_url, image_name
+    return image_url
+
+
+def get_image_name(image_url):
+    image_name = image_url.split('/')[-1]
+    return image_name
 
 
 def parse_book_page(html_page, base_url):
@@ -78,7 +82,8 @@ def parse_book_page(html_page, base_url):
     else:
         title, author = splited_text
 
-    image_url, image_name = get_url_and_name_image(soup, base_url)
+    image_url = get_image_url(soup, base_url)
+    image_name = get_image_name(image_url)
     parsed_content = {
         'author': author,
         'title': title,
@@ -90,12 +95,11 @@ def parse_book_page(html_page, base_url):
     return parsed_content
 
 
-def await_connection(url, params=None, await_time=10):
-    disconnection = True
-    while disconnection:
+def get_response(url, params=None, await_time=10):
+    while True:
         try:
             response = requests.get(url, params)
-            disconnection = False
+            break
         except requests.ConnectionError as err:
             logging.exception(err)
             logging.error('Проверьте интернет соединение, ожидание подключения')
@@ -130,7 +134,7 @@ def main():
     for book_id in range(start_id, end_id):
         page_url = f'https://tululu.org/b{book_id}/'
         try:
-            response = await_connection(page_url)
+            response = get_response(page_url)
             response.raise_for_status()
             check_for_redirect(response)
         except requests.HTTPError as error:
