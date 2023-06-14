@@ -61,17 +61,15 @@ def get_comments(soup):
     return comments
 
 
-def get_image(soup):
-    url = 'https://tululu.org'
-    image = soup.find('div', class_='bookimage').find('img')['src']
-    image_name = image.split('/')[-1]
-    image_url = urljoin(url, image)
+def get_image(soup, base_url):
+    image_address = soup.find('div', class_='bookimage').find('img')['src']
+    image_name = image_address.split('/')[-1]
+    image_url = urljoin(base_url, image_address)
     return image_url, image_name
 
 
-def parse_book_page(html_page):
+def parse_book_page(html_page, base_url):
     soup = BeautifulSoup(html_page, 'lxml')
-    # TODO fix split: broke if ' - ' in name
     splited_text = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
     if len(splited_text) > 2:
         author = splited_text[-1]
@@ -80,7 +78,7 @@ def parse_book_page(html_page):
     else:
         title, author = splited_text
 
-    image_url, image_name = get_image(soup)
+    image_url, image_name = get_image(soup, base_url)
     parsed_content = {
         'author': author,
         'title': title,
@@ -123,7 +121,7 @@ def main():
             check_for_redirect(response)
         except requests.HTTPError:
             continue
-        parsed_content = parse_book_page(response.text)
+        parsed_content = parse_book_page(response.text, response.url)
         title = f"{book_id}. {parsed_content['title']}"
         save_path = download_txt(book_id, title, 'books')
         if save_path:
