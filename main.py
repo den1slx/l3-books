@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin
 import argparse
+import logging
+from time import sleep
 
 
 def check_for_redirect(response):
@@ -18,12 +20,9 @@ def download_txt(book_id, filename, folder):
     filename = sanitize_filename(filename)
     path = Path.cwd().joinpath(folder)
 
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        check_for_redirect(response)
-    except requests.HTTPError:
-        return
+    response = await_connection(url, params=params)
+    response.raise_for_status()
+    check_for_redirect(response)
 
     Path.mkdir(path, parents=True, exist_ok=True)
 
@@ -37,7 +36,7 @@ def download_txt(book_id, filename, folder):
 def download_image(url, filename, folder='images'):
     path = Path.cwd().joinpath(folder)
     Path.mkdir(path, parents=True, exist_ok=True)
-    response = requests.get(url)
+    response = await_connection(url)
     response.raise_for_status()
     with open(f'{folder}/{filename}', 'wb') as file:
         file.write(response.content)
@@ -91,6 +90,20 @@ def parse_book_page(html_page, base_url):
     return parsed_content
 
 
+def await_connection(url, params=None, await_time=10):
+    disconnection = True
+    while disconnection:
+        try:
+            response = requests.get(url, params)
+            disconnection = False
+        except requests.ConnectionError as err:
+            logging.exception(err)
+            logging.error('Проверьте интернет соединение, ожидание подключения')
+            sleep(await_time)
+
+    return response
+
+
 def create_parser():
     parser = argparse.ArgumentParser(description='download books from tululu.org')
     parser.add_argument(
@@ -117,17 +130,23 @@ def main():
     for book_id in range(start_id, end_id):
         page_url = f'https://tululu.org/b{book_id}/'
         try:
-            response = requests.get(page_url)
+            response = await_connection(page_url)
             response.raise_for_status()
             check_for_redirect(response)
-        except requests.HTTPError:
+        except requests.HTTPError as error:
+            logging.exception(error)
+            logging.warning(f'Страница {page_url} не существует')
             continue
         parsed_content = parse_book_page(response.text, response.url)
         title = f"{book_id}. {parsed_content['title']}"
-        path_for_save = download_txt(book_id, title, 'books')
-        if path_for_save:
-            save_comments(parsed_content['comments'], book_id, 'books')
-            download_image(parsed_content['image_url'], parsed_content['image_name'])
+        try:
+            path_for_save = download_txt(book_id, title, 'books')
+            if path_for_save:
+                save_comments(parsed_content['comments'], book_id, 'books')
+                download_image(parsed_content['image_url'], parsed_content['image_name'])
+        except requests.HTTPError as error:
+            logging.exception(error)
+            logging.warning(f'Книги "{parsed_content["title"]}"({page_url}) нет на сайте', )
 
 
 if __name__ == '__main__':
