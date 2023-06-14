@@ -17,7 +17,6 @@ def download_txt(book_id, filename, folder):
     url = f"https://tululu.org/txt.php"
     filename = sanitize_filename(filename)
     path = Path.cwd().joinpath(folder)
-    # path = Path(path_string)
 
     try:
         response = requests.get(url, params=params)
@@ -27,10 +26,12 @@ def download_txt(book_id, filename, folder):
         return
 
     Path.mkdir(path, parents=True, exist_ok=True)
-    with open(f'{folder}/{filename}.txt', 'wb') as file:
+
+    fullpath = path.joinpath(f'{filename}.txt')
+    with open(fullpath, 'wb') as file:
         file.write(response.content)
 
-    return path.joinpath(filename)
+    return fullpath
 
 
 def download_image(url, filename, folder='images'):
@@ -42,7 +43,7 @@ def download_image(url, filename, folder='images'):
         file.write(response.content)
 
 
-def download_comments(comments, book_id, folder):
+def save_comments(comments, book_id, folder):
     with open(f'{folder}/{book_id} comments.txt', 'w') as file:
         file.write(comments)
 
@@ -61,7 +62,7 @@ def get_comments(soup):
     return comments
 
 
-def get_image(soup, base_url):
+def get_url_and_name_image(soup, base_url):
     image_address = soup.find('div', class_='bookimage').find('img')['src']
     image_name = image_address.split('/')[-1]
     image_url = urljoin(base_url, image_address)
@@ -78,7 +79,7 @@ def parse_book_page(html_page, base_url):
     else:
         title, author = splited_text
 
-    image_url, image_name = get_image(soup, base_url)
+    image_url, image_name = get_url_and_name_image(soup, base_url)
     parsed_content = {
         'author': author,
         'title': title,
@@ -123,9 +124,9 @@ def main():
             continue
         parsed_content = parse_book_page(response.text, response.url)
         title = f"{book_id}. {parsed_content['title']}"
-        save_path = download_txt(book_id, title, 'books')
-        if save_path:
-            download_comments(parsed_content['comments'], book_id, 'books')
+        path_for_save = download_txt(book_id, title, 'books')
+        if path_for_save:
+            save_comments(parsed_content['comments'], book_id, 'books')
             download_image(parsed_content['image_url'], parsed_content['image_name'])
 
 
