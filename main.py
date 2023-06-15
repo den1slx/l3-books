@@ -67,11 +67,6 @@ def get_image_url(soup, base_url):
     return image_url
 
 
-def get_image_name(image_url):
-    image_name = image_url.split('/')[-1]
-    return image_name
-
-
 def parse_book_page(html_page, base_url):
     soup = BeautifulSoup(html_page, 'lxml')
     splited_text = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
@@ -83,7 +78,7 @@ def parse_book_page(html_page, base_url):
         title, author = splited_text
 
     image_url = get_image_url(soup, base_url)
-    image_name = get_image_name(image_url)
+    image_name = image_url.split('/')[-1]
     parsed_content = {
         'author': author,
         'title': title,
