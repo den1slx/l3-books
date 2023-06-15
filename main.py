@@ -102,14 +102,14 @@ def get_response(url, params=None, await_time=10):
             break
         except requests.ConnectionError as err:
             logging.exception(err)
-            logging.error('Проверьте интернет соединение, ожидание подключения')
+            logging.error('Проверьте интернет соединение, ожидание подключения.')
             sleep(await_time)
 
     return response
 
 
 def create_parser():
-    parser = argparse.ArgumentParser(description='download books from tululu.org')
+    parser = argparse.ArgumentParser(description='Download books from tululu.org.')
     parser.add_argument(
         '-s',
         '--start_id',
@@ -139,7 +139,7 @@ def main():
             check_for_redirect(response)
         except requests.HTTPError as error:
             logging.exception(error)
-            logging.warning(f'Страница {page_url} не существует')
+            logging.warning(f'Страница {page_url} не существует.')
             continue
         parsed_content = parse_book_page(response.text, response.url)
         title = f"{book_id}. {parsed_content['title']}"
