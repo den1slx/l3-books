@@ -139,10 +139,9 @@ def main():
         parsed_content = parse_book_page(response.text, response.url)
         title = f"{book_id}. {parsed_content['title']}"
         try:
-            path_for_save = download_txt(book_id, title, 'books')
-            if path_for_save:
-                save_comments(parsed_content['comments'], book_id, 'books')
-                download_image(parsed_content['image_url'], parsed_content['image_name'])
+            download_txt(book_id, title, 'books')
+            save_comments(parsed_content['comments'], book_id, 'books')
+            download_image(parsed_content['image_url'], parsed_content['image_name'])
         except requests.HTTPError as error:
             logging.exception(error)
             logging.warning(f'Книги "{parsed_content["title"]}"({page_url}) нет на сайте', )
