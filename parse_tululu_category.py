@@ -1,16 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
+from pprint import pprint
+import logging
+import json
 
-
-def get_response(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return response
+from main import parse_book_page, download_txt, download_image, save_comments, check_for_redirect, get_response
 
 
 def get_books_url(url):
     response = get_response(url)
+    response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
     base = response.url
     books = soup.find('div', id='content').find_all('table', class_='d_book')
@@ -20,12 +20,41 @@ def get_books_url(url):
 
 def main():
     books_urls = []
-    for page in range(1, 11):
+    start = 1  # for parser
+    end = 5  # for parser
+    for page in range(start, end):
         url = f'https://tululu.org/l55/{page}/'
-        books_urls.extend(get_books_url(url))
+        try:
+            urls = get_books_url(url)
+            books_urls.extend(urls)
+        except requests.HTTPError:
+            continue
 
-    print(len(books_urls))
-    print(books_urls)
+    parsed_books = []
+    for url in books_urls:
+        response = get_response(url)
+        response.raise_for_status()
+        check_for_redirect(response)
+        try:
+            parsed_book = parse_book_page(response.text, response.url)
+            parsed_books.append(parsed_book)
+        except requests.HTTPError:
+            continue
+
+    with open('books.json', 'w', encoding='UTF-8') as file:
+        json_books = json.dumps(parsed_books, ensure_ascii=False)
+        file.write(json_books)
+
+    # pprint(parsed_books, sort_dicts=False)
+
+    for book in parsed_books:
+        try:
+            download_txt(book['book_id'], book['title'], 'books')
+            # save_comments(str(book['comments']), book['book_id'], 'books')
+            download_image(book['image_url'], book['image_name'])
+        except requests.HTTPError as error:
+            # logging.exception(error)
+            logging.warning(f'Книги "{book["title"]}" нет на сайте')
 
 
 if __name__ == '__main__':
