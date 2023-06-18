@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlsplit
-from pprint import pprint
 import logging
 import json
 
@@ -13,8 +12,9 @@ def get_books_url(url):
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
     base = response.url
-    books = soup.find('div', id='content').find_all('table', class_='d_book')
-    books_urls = [urljoin(base, book.find('a')['href']) for book in books]
+    selector = '#content table.d_book'
+    books = soup.select(selector)
+    books_urls = [urljoin(base, book.select_one('a')['href']) for book in books]
     return books_urls
 
 
@@ -58,8 +58,7 @@ def main():
     for book in parsed_books:
         try:
             download_txt(book['book_id'], book['title'], 'books')
-            # save_comments(str(book['comments']), book['book_id'], 'books')
-            # download_image(book['image_url'], book['image_name'])
+            download_image(book['image_url'], book['image_name'])
         except requests.HTTPError as error:
             # logging.exception(error)
             logging.warning(f'Книги "{book["title"]}" нет на сайте')
@@ -67,4 +66,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

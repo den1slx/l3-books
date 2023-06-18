@@ -48,19 +48,22 @@ def save_comments(comments, book_id, folder):
 
 
 def get_genres(soup):
-    genres = soup.find('span', class_='d_book').find_all('a')
+    selector = 'span.d_book a'
+    genres = soup.select(selector)
     genres = [genre.text for genre in genres]
     return genres
 
 
 def get_comments(soup):
-    soup_comments = soup.body.table.find_all('div', class_='texts')
+    selector = 'table div.texts '
+    soup_comments = soup.select(selector)
     comments = [comment.span.text for comment in soup_comments]
     return comments
 
 
 def get_image_url(soup, base_url):
-    image_address = soup.find('div', class_='bookimage').find('img')['src']
+    selector = 'div.bookimage img'
+    image_address = soup.select_one(selector)['src']
     image_url = urljoin(base_url, image_address)
     return image_url
 
