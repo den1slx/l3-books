@@ -20,7 +20,7 @@ def get_books_url(url):
     return books_urls
 
 
-def read_json_file(path='books.json'):
+def read_json_file(path):
     with open(path, 'r', encoding='UTF-8') as file:
         json_file = file.read()
     parsed_books = json.loads(json_file)
@@ -80,6 +80,7 @@ def main():
     start, end = args.start_page, args.end_page
     skip_images, skip_text = args.skip_images, args.skip_texts
     path = args.dest_folder
+    path = Path(path)
 
     books_urls = []
     for page in range(start, end):
@@ -99,17 +100,17 @@ def main():
             parsed_books.append(parsed_book)
         except requests.HTTPError:
             continue
-    #
-    with open('books.json', 'w', encoding='UTF-8') as file:
+    json_file_path = path.joinpath('books.json')
+    with open(json_file_path, 'w', encoding='UTF-8') as file:
         json_books = json.dumps(parsed_books, ensure_ascii=False)
         file.write(json_books)
 
-    parsed_books = read_json_file()
+    parsed_books = read_json_file(json_file_path)
 
     for book in parsed_books:
         try:
             if skip_text:
-                download_txt(book['book_id'], book['title'], 'books', path)
+                download_txt(book['book_id'], book['title'], 'books', path=path)
             if skip_images:
                 download_image(book['image_url'], book['image_name'], path=path)
         except requests.HTTPError:

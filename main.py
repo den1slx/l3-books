@@ -38,7 +38,8 @@ def download_image(url, filename, folder='images', path=Path.cwd()):
     Path.mkdir(path, parents=True, exist_ok=True)
     response = get_response(url)
     response.raise_for_status()
-    with open(f'{folder}/{filename}', 'wb') as file:
+    file_path = path.joinpath(filename)
+    with open(file_path, 'wb') as file:
         file.write(response.content)
 
 
