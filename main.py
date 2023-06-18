@@ -3,7 +3,7 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 import argparse
 import logging
 from time import sleep
@@ -67,6 +67,11 @@ def get_image_url(soup, base_url):
     return image_url
 
 
+def get_book_id(url):
+    book_id = urlsplit(url).path.lstrip('/b').rstrip('/')
+    return book_id
+
+
 def parse_book_page(html_page, base_url):
     soup = BeautifulSoup(html_page, 'lxml')
     splited_text = soup.title.text.replace(', читать онлайн, скачать книгу бесплатно', '').split(' - ')
@@ -86,6 +91,7 @@ def parse_book_page(html_page, base_url):
         'comments': get_comments(soup),
         'image_url': image_url,
         'image_name': image_name,
+        'book_id': get_book_id(base_url),
     }
     return parsed_content
 
