@@ -1,12 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin
 from pathlib import Path
 import logging
 import json
 import argparse
 
-from main import parse_book_page, download_txt, download_image, save_comments, check_for_redirect, get_response
+from main import parse_book_page, download_txt, download_image, check_for_redirect, get_response
 
 
 def get_books_url(url):
