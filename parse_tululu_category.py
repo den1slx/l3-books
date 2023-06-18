@@ -18,10 +18,16 @@ def get_books_url(url):
     return books_urls
 
 
-books_urls = []
-page = 1
-url = f'https://tululu.org/l55/{page}/'
-books_urls.extend(get_books_url(url))
-print(books_urls)
+def main():
+    books_urls = []
+    for page in range(1, 11):
+        url = f'https://tululu.org/l55/{page}/'
+        books_urls.extend(get_books_url(url))
 
+    print(len(books_urls))
+    print(books_urls)
+
+
+if __name__ == '__main__':
+    main()
 
