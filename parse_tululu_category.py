@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlsplit
+from pathlib import Path
 import logging
 import json
 import argparse
@@ -50,13 +51,36 @@ def create_parser():
         type=int,
         help='Complete download on this id, default: %(default)s'
     )
+    parser.add_argument(
+        '-si',
+        '--skip_images',
+        action='store_false',
+        help='Indicate this for not download images'
+    )
+    parser.add_argument(
+        '-st',
+        '--skip_texts',
+        action='store_false',
+        help='Indicate this for not download books',
+    )
+    parser.add_argument(
+        '-d',
+        '--dest_folder',
+        type=str,
+        help='Downloaded files saved on this path. Default: %(default)s',
+        default=Path.cwd()
+    )
     return parser
 
 
 def main():
     parser = create_parser()
     args = parser.parse_args()
+
     start, end = args.start_page, args.end_page
+    skip_images, skip_text = args.skip_images, args.skip_texts
+    path = args.dest_folder
+
     books_urls = []
     for page in range(start, end):
         url = f'https://tululu.org/l55/{page}/'
@@ -76,17 +100,18 @@ def main():
         except requests.HTTPError:
             continue
     #
-    # with open('books.json', 'w', encoding='UTF-8') as file:
-    #     json_books = json.dumps(parsed_books, ensure_ascii=False)
-    #     file.write(json_books)
+    with open('books.json', 'w', encoding='UTF-8') as file:
+        json_books = json.dumps(parsed_books, ensure_ascii=False)
+        file.write(json_books)
 
-    # parsed_books = read_json_file()
-    # pprint(parsed_books, sort_dicts=False)
-    #
+    parsed_books = read_json_file()
+
     for book in parsed_books:
         try:
-            download_txt(book['book_id'], book['title'], 'books')
-            download_image(book['image_url'], book['image_name'])
+            if skip_text:
+                download_txt(book['book_id'], book['title'], 'books', path)
+            if skip_images:
+                download_image(book['image_url'], book['image_name'], path=path)
         except requests.HTTPError:
             logging.warning(f'Книги "{book["title"]}" нет на сайте')
 
