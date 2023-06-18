@@ -55,9 +55,7 @@ def get_genres(soup):
 
 def get_comments(soup):
     soup_comments = soup.body.table.find_all('div', class_='texts')
-    comments = ''
-    for comment in soup_comments:
-        comments += f'{comment.span.text}\n'
+    comments = [comment.span.text for comment in soup_comments]
     return comments
 
 
@@ -146,7 +144,7 @@ def main():
         title = f"{book_id}. {parsed_content['title']}"
         try:
             download_txt(book_id, title, 'books')
-            save_comments(parsed_content['comments'], book_id, 'books')
+            save_comments(str(parsed_content['comments']), book_id, 'books')
             download_image(parsed_content['image_url'], parsed_content['image_name'])
         except requests.HTTPError as error:
             logging.exception(error)
