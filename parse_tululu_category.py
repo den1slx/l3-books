@@ -32,7 +32,7 @@ def get_latest_page(url='https://tululu.org/l55/'):
     soup = BeautifulSoup(response.text, 'lxml')
     selector = '#content p.center a'
     latest = soup.select(selector)[-1].text
-    return int(latest)
+    return int(latest) + 1
 
 
 def create_parser():
