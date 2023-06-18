@@ -14,11 +14,11 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def download_txt(book_id, filename, folder):
+def download_txt(book_id, filename, folder, path=Path.cwd()):
     params = {'id': book_id}
     url = f"https://tululu.org/txt.php"
     filename = sanitize_filename(filename)
-    path = Path.cwd().joinpath(folder)
+    path = path.joinpath(folder)
 
     response = get_response(url, params=params)
     response.raise_for_status()
@@ -33,8 +33,8 @@ def download_txt(book_id, filename, folder):
     return fullpath
 
 
-def download_image(url, filename, folder='images'):
-    path = Path.cwd().joinpath(folder)
+def download_image(url, filename, folder='images', path=Path.cwd()):
+    path = path.joinpath(folder)
     Path.mkdir(path, parents=True, exist_ok=True)
     response = get_response(url)
     response.raise_for_status()
