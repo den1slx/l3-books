@@ -12,6 +12,7 @@ from main import parse_book_page, download_txt, download_image, check_for_redire
 def get_books_url(url):
     response = get_response(url)
     response.raise_for_status()
+    check_for_redirect(response)
     soup = BeautifulSoup(response.text, 'lxml')
     base = response.url
     selector = '#content table.d_book'
