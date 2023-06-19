@@ -84,8 +84,8 @@ def main():
     path = Path(path)
 
     books_urls = []
-    for page in range(start, end):
-        url = f'https://tululu.org/l55/{page}/'
+    for page_number in range(start, end):
+        url = f'https://tululu.org/l55/{page_number}/'
         try:
             urls = get_books_url(url)
             books_urls.extend(urls)
@@ -105,8 +105,6 @@ def main():
     with open(json_file_path, 'w', encoding='UTF-8') as file:
         json_books = json.dumps(parsed_books, ensure_ascii=False)
         file.write(json_books)
-
-    parsed_books = read_json_file(json_file_path)
 
     for book in parsed_books:
         try:
