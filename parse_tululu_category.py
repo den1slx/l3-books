@@ -29,6 +29,7 @@ def read_json_file(path):
 
 def get_latest_page(url='https://tululu.org/l55/'):
     response = get_response(url)
+    response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
     selector = '#content p.center a'
     latest = soup.select(selector)[-1].text
