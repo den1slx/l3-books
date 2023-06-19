@@ -55,13 +55,13 @@ def create_parser():
     parser.add_argument(
         '-si',
         '--skip_images',
-        action='store_false',
+        action='store_true',
         help='Indicate this for not download images'
     )
     parser.add_argument(
         '-st',
         '--skip_texts',
-        action='store_false',
+        action='store_true',
         help='Indicate this for not download books',
     )
     parser.add_argument(
@@ -110,9 +110,9 @@ def main():
 
     for book in parsed_books:
         try:
-            if skip_text:
+            if not skip_text:
                 download_txt(book['book_id'], book['title'], 'books', path=path)
-            if skip_images:
+            if not skip_images:
                 download_image(book['image_url'], book['image_name'], path=path)
         except requests.HTTPError:
             logging.warning(f'Книги "{book["title"]}" нет на сайте')
