@@ -89,17 +89,21 @@ def main():
         try:
             urls = get_books_url(url)
             books_urls.extend(urls)
-        except requests.HTTPError:
+        except requests.HTTPError as err:
+            logging.exception(err)
+            logging.warning(f'страница с книгами "{url}" не найдена')
             continue
     parsed_books = []
     for url in books_urls:
         response = get_response(url)
-        response.raise_for_status()
-        check_for_redirect(response)
         try:
+            response.raise_for_status()
+            check_for_redirect(response)
             parsed_book = parse_book_page(response.text, response.url)
             parsed_books.append(parsed_book)
-        except requests.HTTPError:
+        except requests.HTTPError as err:
+            logging.exception(err)
+            logging.warning(f'Страница книги "{url}" не найдена')
             continue
     json_file_path = path.joinpath('books.json')
     with open(json_file_path, 'w', encoding='UTF-8') as file:
