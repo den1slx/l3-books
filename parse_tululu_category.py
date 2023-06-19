@@ -1,24 +1,12 @@
 import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 from pathlib import Path
 import logging
 import json
 import argparse
 
-from main import parse_book_page, download_txt, download_image, check_for_redirect, get_response
-
-
-def get_books_url(url):
-    response = get_response(url)
-    response.raise_for_status()
-    check_for_redirect(response)
-    soup = BeautifulSoup(response.text, 'lxml')
-    base = response.url
-    selector = '#content table.d_book'
-    books = soup.select(selector)
-    books_urls = [urljoin(base, book.select_one('a')['href']) for book in books]
-    return books_urls
+from download_functions import download_txt, download_image
+from parse_functions import parse_book_page, get_books_url, get_latest_page
+from requests_functions import get_response, check_for_redirect
 
 
 def read_json_file(path):
@@ -26,15 +14,6 @@ def read_json_file(path):
         json_file = file.read()
     parsed_books = json.loads(json_file)
     return parsed_books
-
-
-def get_latest_page(url='https://tululu.org/l55/'):
-    response = get_response(url)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'lxml')
-    selector = '#content p.center a'
-    latest = soup.select(selector)[-1].text
-    return int(latest) + 1
 
 
 def create_parser():
