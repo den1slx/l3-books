@@ -27,7 +27,7 @@ python main.py -s 10 -e 20
 #### parse_tululu_category
 - Получите подсказку командой:
 ```commandline
-python main.py -h
+python parse_tululu_category.py-h
 ```
 - Аргументы:
   * `-s` - Скачиваем книги начиная с этой страницы. Начальное значение учитывается.   
@@ -39,13 +39,13 @@ python main.py -h
 
 - Пример 1:
 ```commandline
-parse_tululu_category.py -s 700
+python parse_tululu_category.py -s 700
 ```
 Будут скачаны книги с 700 и всех последующих страниц
 
 - Пример 2:
 ```commandline
-parse_tululu_category.py -s 625 -e 627 -si -st
+python parse_tululu_category.py -s 625 -e 627 -si -st
 ```
 Будет скачан только json-файл содержащий информацию о книгах со страниц 625 и 626
 
