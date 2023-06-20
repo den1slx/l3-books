@@ -80,8 +80,7 @@ def main():
             continue
     json_file_path = path.joinpath('books.json')
     with open(json_file_path, 'w', encoding='UTF-8') as file:
-        json_books = json.dumps(parsed_books, ensure_ascii=False)
-        file.write(json_books)
+        json.dump(parsed_books, file, ensure_ascii=False)
 
     for book in parsed_books:
         try:
