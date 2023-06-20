@@ -9,13 +9,6 @@ from parse_functions import parse_book_page, get_books_url, get_latest_page
 from requests_functions import get_response, check_for_redirect
 
 
-def read_json_file(path):
-    with open(path, 'r', encoding='UTF-8') as file:
-        json_file = file.read()
-    parsed_books = json.loads(json_file)
-    return parsed_books
-
-
 def create_parser():
     parser = argparse.ArgumentParser(description='Download books from tululu.org.')
     parser.add_argument(
